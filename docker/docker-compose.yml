@@ -1,0 +1,62 @@
+version: '3'
+services:
+  mysql-docker:
+    image: mysql:8.4
+    environment:
+      MYSQL_DATABASE: 'insight'
+      MYSQL_ROOT_PASSWORD: '1234'
+      TZ: Asia/Seoul
+    container_name: 'insight-mysql'
+    command: --mysql_native_password=ON
+    ports:
+      - '3306:3306'
+    volumes:
+      - /Users/kimyongchul/Documents/docker/data/mysql:/var/lib/mysql
+
+  redis-docker:
+    image: redis:latest
+    container_name: 'insight-redis'
+    command: redis-server --port 6379
+    ports:
+      - '6379:6379'
+    volumes:
+      - /Users/kimyongchul/Documents/docker/data/redis:/data
+  elasticsearch:
+    image: elasticsearch:8.4.0
+    ports:
+      - 9200:9200
+    environment:
+      discovery.type: 'single-node'
+      xpack.security.enabled: 'true'
+      ELASTIC_PASSWORD: '1234qwer'
+      ES_JAVA_OPTS: '-Xmx2g -Xms2g'
+  kibana:
+    image: kibana:7.8.1
+#    volumes:
+#      - ./kibana.yml:/usr/share/kibana/config/kibana.yml
+    ports:
+      - 5601:5601
+    depends_on:
+      - elasticsearch
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.6.0
+    container_name: zookeeper
+    ports:
+      - "2181:2181"
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+
+  kafka:
+    image: confluentinc/cp-kafka:7.6.0
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1

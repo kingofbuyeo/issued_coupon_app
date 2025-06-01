@@ -1,0 +1,49 @@
+###
+POST http://localhost:8080/api/v1/coupon/issuedCoupon
+Content-Type: application/json
+
+{
+  "couponGroupName": "이벤트 쿠폰",
+  "issuedCount": 5000,
+  "issuedAvailableTime": "2025-06-01T13:00:00+09:00",
+  "expiredAt": "2025-06-10T13:00:00+09:00",
+  "couponGroup": [
+    {
+      "couponName": "20000원 쿠폰",
+      "amount": 20000
+    },
+    {
+      "couponName": "10000원 쿠폰",
+      "amount": 10000
+    },
+    {
+      "couponName": "5000원 쿠폰",
+      "amount": 5000
+    },
+    {
+      "couponName": "4000원 쿠폰",
+      "amount": 4000
+    },
+    {
+      "couponName": "3000원 쿠폰",
+      "amount": 3000
+    },
+    {
+      "couponName": "2000원 쿠폰",
+      "amount": 2000
+    },
+    {
+      "couponName": "1000원 쿠폰",
+      "amount": 1000
+    }
+  ]
+}
+
+###
+POST http://localhost:8080/api/v1/coupon/request/e74015dc-9f69-4fa3-a714-f893c9675963
+Content-Type: application/json
+
+{
+  "userId": "logan",
+  "issuedType": "RANDOM"
+}
