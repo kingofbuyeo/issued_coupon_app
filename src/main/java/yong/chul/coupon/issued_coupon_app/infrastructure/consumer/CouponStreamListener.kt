@@ -34,7 +34,7 @@ class CouponStreamListener(
     private val redisService: RedisService
 ){
     private val log = LoggerFactory.getLogger(this::class.java)
-    @KafkaListener(topics = [ISSUED_COUPON_TOPIC], groupId = COUPON_GROUP, containerFactory = "kafkaListenerContainerFactory")
+    @KafkaListener(topics = [ISSUED_COUPON_TOPIC], groupId = COUPON_GROUP, containerFactory = "kafkaListenerContainerFactory", concurrency = "5")
     @Transactional
     @Retryable(backoff = Backoff(delay = 300), maxAttempts = 2, value = [ObjectOptimisticLockingFailureException::class])
     fun consume(payload: IssuedCouponMessage, ack: Acknowledgment) {

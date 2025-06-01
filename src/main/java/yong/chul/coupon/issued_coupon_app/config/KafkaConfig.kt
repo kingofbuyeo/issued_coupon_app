@@ -1,5 +1,6 @@
 package yong.chul.coupon.issued_coupon_app.config
 
+import org.apache.kafka.clients.admin.NewTopic
 import org.apache.kafka.clients.consumer.ConsumerConfig
 import org.apache.kafka.clients.producer.ProducerConfig
 import org.apache.kafka.common.serialization.StringDeserializer
@@ -9,11 +10,13 @@ import org.springframework.context.annotation.Bean
 import org.springframework.context.annotation.Configuration
 import org.springframework.kafka.annotation.EnableKafka
 import org.springframework.kafka.config.ConcurrentKafkaListenerContainerFactory
+import org.springframework.kafka.config.TopicBuilder
 import org.springframework.kafka.core.*
 import org.springframework.kafka.listener.ContainerProperties
 import org.springframework.kafka.support.serializer.JsonDeserializer
 import org.springframework.kafka.support.serializer.JsonSerializer
 import yong.chul.coupon.issued_coupon_app.config.CouponStreamNames.COUPON_GROUP
+import yong.chul.coupon.issued_coupon_app.config.CouponStreamNames.ISSUED_COUPON_TOPIC
 import yong.chul.coupon.issued_coupon_app.infrastructure.producer.message.IssuedCouponMessage
 
 @Configuration
@@ -22,6 +25,14 @@ class KafkaConfig(
     @Value("\${spring.kafka.bootstrap-servers}")
     private val kafkaHost: String
 ) {
+    @Bean
+    fun topicExample(): NewTopic {
+        return TopicBuilder.name(ISSUED_COUPON_TOPIC)
+            .partitions(5) // 원하는 파티션 수
+            .replicas(1)   // 복제본 수 (단일 브로커라면 1)
+            .build()
+    }
+
     @Bean
     fun producerFactory(): ProducerFactory<String, IssuedCouponMessage> {
         val props = mapOf(
