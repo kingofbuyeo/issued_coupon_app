@@ -17,7 +17,7 @@
 ---
 
 ## 시스템 아키텍처
-
+```bash
 Client (User/Admin)
 ├─ REST API 요청 (쿠폰 등록 / 발급 요청)
 │
@@ -30,35 +30,26 @@ Redis Server
 ├─ 쿠폰 발급 요청 Stream (coupon-requests)
 ├─ 사용자 중복 발급 체크 키 저장
 │
-Redis Stream Consumer
+Kafka Stream
 ├─ Stream 메시지 비동기 처리
 ├─ Lua 스크립트로 재고 감소 및 중복 체크 원자적 처리
-├─ 발급 성공/실패 로그 기록
-
-
+├─ 발급 성공/실패 로그 
+```
 ---
 
 ## 설치 및 실행 방법
 
 1. Redis 설치 및 실행 (기본 설정 사용 권장)
    ```bash
-   redis-server
-
-
----
-
-## 설치 및 실행 방법
-
-1. Redis 설치 및 실행 (기본 설정 사용 권장)
-   ```bash
-   redis-server
-프로젝트 클론 및 빌드
+   docker-compose -f ./docker/docker-compose.yml up
+   ```
+## 프로젝트 클론 및 빌드
 git clone <repo-url>
 cd coupon-issuance
 ./gradlew build
 
 
-애플리케이션 실행
+## 애플리케이션 실행
 
 bash
 복사
@@ -66,60 +57,89 @@ bash
 ./gradlew bootRun
 API 호출 (기본 포트 8080)
 
-API 명세
+## API 명세
 1. 쿠폰 등록
-   URL: /api/coupons/register
-
-Method: POST
-
-Request Body:
-
-json
-복사
-편집
+````http request
+POST {{host}}/api/v1/coupon/issuedCoupon
+Content-Type: application/json
 {
-"couponId": "SPRING2025",
-"quantity": 1000
+  "couponGroupName": "이벤트 쿠폰",
+  "issuedCount": 5000,
+  "issuedAvailableTime": "2025-06-01T13:00:00+09:00",
+  "expiredAt": "2025-06-10T13:00:00+09:00",
+  "couponGroup": [
+    {
+      "couponName": "20000원 쿠폰",
+      "amount": 20000
+    },
+    {
+      "couponName": "10000원 쿠폰",
+      "amount": 10000
+    },
+    {
+      "couponName": "5000원 쿠폰",
+      "amount": 5000
+    },
+    {
+      "couponName": "4000원 쿠폰",
+      "amount": 4000
+    },
+    {
+      "couponName": "3000원 쿠폰",
+      "amount": 3000
+    },
+    {
+      "couponName": "2000원 쿠폰",
+      "amount": 2000
+    },
+    {
+      "couponName": "1000원 쿠폰",
+      "amount": 1000
+    }
+  ]
 }
+
 Response:
+{
+  "couponGroupId": "fc5e8f41-30fd-42b6-a234-1ed0f8885b74",
+  "couponGroupName": "이벤트 쿠폰"
+}
 
 200 OK: 쿠폰 등록 완료 메시지
+````
 
 2. 쿠폰 발급 요청
-   URL: /api/coupons/request
+````http request
+POST {{host}}/api/v1/coupon/request/e74015dc-9f69-4fa3-a714-f893c9675963
+Content-Type: application/json
 
-Method: POST
-
-Request Body:
-
-json
-복사
-편집
 {
-"userId": "user123",
-"couponId": "SPRING2025"
+  "userId": "logan",
+  "issuedType": "RANDOM"
 }
+
+
 Response:
 
 200 OK: 발급 요청 성공
 
 400 Bad Request: 재고 부족으로 발급 실패
-
-내부 동작 상세
+````
+## 내부 동작 상세
 1) 쿠폰 등록
-   관리자가 쿠폰 아이디와 수량을 API로 등록하면, Redis에 쿠폰 재고 키(coupon:{couponId}:stock)를 저장합니다.
+   1) 관리자가 쿠폰 아이디와 수량을 API로 등록하면, Redis에 쿠폰 재고 키(coupon:{couponGroupId}:stock)를 저장합니다.
 
 2) 쿠폰 발급 요청
-   사용자가 발급 요청 API를 호출하면 다음이 수행됩니다:
+   1) 사용자가 발급 요청 API를 호출하면 다음이 수행됩니다:
 
-Redis에 coupon:{couponId}:requested 키의 값을 증가시켜 요청 수를 집계합니다.
+Redis에 coupon:{couponGroupId}:stock에 쿠폰 그룹의 전체 제고를 적재
 
 요청 수가 현재 재고(coupon:{couponId}:stock)보다 많으면 즉시 실패 응답 반환.
 
-그렇지 않으면, Redis Stream(coupon-requests)에 요청 정보를 저장해 비동기 처리 대기.
+그렇지 않으면, Kafka Stream(coupon-requests)에 요청 정보를 저장해 비동기 처리 대기.
 
 3) Redis Stream 소비 및 쿠폰 발급 처리
-   별도의 Redis Stream Consumer가 주기적으로 요청 메시지를 읽습니다.
+   1) 별도의 Redis Stream Consumer가 주기적으로 요청 메시지를 읽습니다.
 
 각 요청에 대해 Lua 스크립트를 실행해 다음 작업을 원자적으로 수행합니다:
 
@@ -131,32 +151,33 @@ Redis에 coupon:{couponId}:requested 키의 값을 증가시켜 요청 수를 �
 
 Lua 스크립트 결과에 따라 발급 성공/실패를 로그에 기록합니다.
 
-Redis Lua 스크립트
-lua
-복사
-편집
-local stock = tonumber(redis.call('GET', KEYS[1]))
-if not stock or stock <= 0 then return 0 end
-
-if redis.call('SETNX', KEYS[2], 'issued') == 1 then
-redis.call('DECR', KEYS[1])
-return 1
-else
-return 2
+## Redis Lua 스크립트
+````javascript
+if redis.call('exists', KEYS[1]) == 1 then
+return false
 end
-KEYS[1]: 쿠폰 재고 키 (coupon:{couponId}:stock)
+local stock = tonumber(redis.call('GET', KEYS[2]))
+if not stock or stock <= 0 then return false end
+local couponStock = tonumber(redis.call('GET', KEYS[3]))
+if not couponStock or couponStock <= 0 then return false end
+redis.call('set', KEYS[1], '1')
+redis.call('decr', KEYS[2])
+redis.call('decr', KEYS[3])
+return true
+KEYS[1]: 사용자 쿠폰 발급 유효성 체크 키 (coupon:${couponGroupId}:user:${userId})
 
-KEYS[2]: 사용자 발급 여부 체크 키 (coupon:{couponId}:user:{userId})
+KEYS[2]: 쿠폰 그룹 전체 재고 키 (coupon:${couponGroupId}:stock)
+
+KEYS[3]: 쿠폰 그룹의 상세 쿠폰 재코 키(coupon:${couponGroupId}:${couponId}:stock)
 
 반환값:
 
-0: 재고 없음 → 발급 실패
+true: 성공
 
-1: 발급 성공 (재고 차감 완료)
+false: 실패
 
-2: 이미 발급된 사용자 (중복 시도)
-
-주요 고려사항 및 확장 포인트
+````
+## 주요 고려사항 및 확장 포인트
 Redis의 Lua 스크립트로 원자적 처리 보장 → 동시성 문제 예방
 
 Redis Stream을 활용한 비동기 발급 처리로 API 부하 분산
@@ -169,7 +190,7 @@ Redis Stream을 활용한 비동기 발급 처리로 API 부하 분산
 
 관리자 대시보드 개발 및 쿠폰 통계 추가 가능
 
-참고자료
+### 참고자료
 Spring Data Redis WebFlux 공식문서
 
 Redis Lua Scripting
@@ -179,18 +200,18 @@ Reactive Programming with Reactor
 문의
 시스템 관련 질문이나 제안은 이슈 혹은 메일로 문의 부탁드립니다.
 
-yaml
-복사
-편집
-
 ---
 
-필요하면 PlantUML이나 실제 도구로 다이어그램도 추가해 드릴 수 있습니다.  
-이 README 형식이면 개발팀과 운영팀 모두 쉽게 이해할 수 있을 거예요!
+# 실행 결과
+### vUser50
+- ![vuser_50.png](docs/vuser_50.png)
 
+### vUser100
 
+- ![vuser_100.png](docs/vuser_100.png)
 
+### vUser200
+- ![vuser_200.png](docs/vuser_200.png)
 
-
-
-
+### vUser300
+- ![vuser_300.png](docs/vuser_300.png)
