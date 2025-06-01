@@ -17,7 +17,7 @@
 ---
 
 ## 시스템 아키텍처
-```bash
+```html
 Client (User/Admin)
 ├─ REST API 요청 (쿠폰 등록 / 발급 요청)
 │
