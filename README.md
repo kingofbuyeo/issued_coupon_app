@@ -23,7 +23,7 @@ Client (User/Admin)
 │
 Spring Boot WebFlux API 서버
 ├─ 쿠폰 재고 조회 및 요청 수 관리 (Redis Key-Value)
-├─ 쿠폰 발급 요청 Redis Stream 기록
+├─ 쿠폰 발급 요청 Kafka Message 발행
 │
 Redis Server
 ├─ 쿠폰 재고, 발급 요청 카운터 저장
