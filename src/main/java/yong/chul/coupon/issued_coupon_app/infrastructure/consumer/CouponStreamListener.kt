@@ -12,10 +12,7 @@ import org.springframework.stereotype.Component
 import org.springframework.transaction.annotation.Transactional
 import yong.chul.coupon.issued_coupon_app.config.CouponStreamNames.COUPON_GROUP
 import yong.chul.coupon.issued_coupon_app.config.CouponStreamNames.ISSUED_COUPON_TOPIC
-import yong.chul.coupon.issued_coupon_app.core.CouponGroupRepository
-import yong.chul.coupon.issued_coupon_app.core.CouponRepository
-import yong.chul.coupon.issued_coupon_app.core.IssuedCoupon
-import yong.chul.coupon.issued_coupon_app.core.IssuedCouponRepository
+import yong.chul.coupon.issued_coupon_app.core.*
 import yong.chul.coupon.issued_coupon_app.core.service.FindCouponService
 import yong.chul.coupon.issued_coupon_app.infrastructure.producer.message.IssuedCouponMessage
 import yong.chul.coupon.issued_coupon_app.infrastructure.redis.RedisService
@@ -57,6 +54,7 @@ class CouponStreamListener(
             redisService.saveIssuedCoupon(payload.userId, couponGroup)
 //            val coupon = couponRepository.findByCouponId(payload.couponId)
             val record = IssuedCoupon(
+                issuedCouponId = generateId(),
                 couponGroupId = payload.couponGroupId,
                 couponId = coupon.couponId,
                 userId = payload.userId,

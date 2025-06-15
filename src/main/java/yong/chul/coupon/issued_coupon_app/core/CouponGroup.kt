@@ -27,4 +27,8 @@ data class CouponGroup(
     fun setExpired(): Duration {
         return Duration.between(LocalDateTime.now(), expiredAt)
     }
+
+    fun canUseCoupon(): Boolean {
+        return LocalDateTime.now().isBefore(this.expiredAt)
+    }
 }

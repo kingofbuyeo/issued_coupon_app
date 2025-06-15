@@ -3,13 +3,13 @@ POST http://localhost:8080/api/v1/coupon/issuedCoupon
 Content-Type: application/json
 
 {
-  "couponGroupName": "이벤트 쿠폰",
-  "issuedCount": 5000,
-  "issuedAvailableTime": "2025-06-01T13:00:00+09:00",
-  "expiredAt": "2025-06-10T13:00:00+09:00",
+  "couponGroupName": "당신과 함께 12시 타임 어택",
+  "issuedCount": 14000,
+  "issuedAvailableTime": "2025-06-10T13:00:00+09:00",
+  "expiredAt": "2025-07-10T13:00:00+09:00",
   "couponGroup": [
     {
-      "couponName": "20000원 쿠폰",
+      "couponName": "10000원 쿠폰",
       "amount": 20000
     },
     {
@@ -27,23 +27,23 @@ Content-Type: application/json
     {
       "couponName": "3000원 쿠폰",
       "amount": 3000
-    },
-    {
-      "couponName": "2000원 쿠폰",
-      "amount": 2000
-    },
-    {
-      "couponName": "1000원 쿠폰",
-      "amount": 1000
     }
   ]
 }
 
 ###
-POST http://localhost:8080/api/v1/coupon/request/61cdda86-4ad0-48cf-95b6-16ed660a9862
+POST http://localhost:8080/api/v1/coupon/request/4c45b9af-a938-4740-b99f-a9d0a614cca1
 Content-Type: application/json
 
 {
   "userId": "logan",
   "issuedType": "RANDOM"
+}
+
+###
+POST http://localhost:8080/api/v1/coupon/useCoupon/1c8ce024-33f3-46be-a665-778ca37df1e5
+Content-Type: application/json
+
+{
+  "userId": "logan"
 }

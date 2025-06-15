@@ -3,8 +3,10 @@ package yong.chul.coupon.issued_coupon_app.infrastructure
 import org.springframework.web.bind.annotation.*
 import yong.chul.coupon.issued_coupon_app.infrastructure.dto.IssuedCouponRequest
 import yong.chul.coupon.issued_coupon_app.infrastructure.dto.RequestCouponRequest
+import yong.chul.coupon.issued_coupon_app.infrastructure.dto.UseCouponRequest
 import yong.chul.coupon.issued_coupon_app.usecase.IssuedCouponFromAdmin
 import yong.chul.coupon.issued_coupon_app.usecase.RequestCouponForUser
+import yong.chul.coupon.issued_coupon_app.usecase.UseCouponFromUser
 import yong.chul.coupon.issued_coupon_app.usecase.presenter.IssuedCouponPresenter
 
 
@@ -13,6 +15,7 @@ import yong.chul.coupon.issued_coupon_app.usecase.presenter.IssuedCouponPresente
 class CouponController(
     private val issuedCouponFromAdmin: IssuedCouponFromAdmin,
     private val requestCouponForUser: RequestCouponForUser,
+    private val useCouponFromUser: UseCouponFromUser
 ) {
 
     @PostMapping("request/{couponGroupId}")
@@ -28,5 +31,13 @@ class CouponController(
         @RequestBody req: IssuedCouponRequest
     ): IssuedCouponPresenter {
         return issuedCouponFromAdmin.registerCoupon(req.toCommand())
+    }
+
+    @PostMapping("useCoupon/{issuedCouponId}")
+    fun useCoupon(
+        @PathVariable("issuedCouponId") issuedCouponId: String,
+        @RequestBody request: UseCouponRequest
+    ) {
+        useCouponFromUser.useCoupon(request.toCommand(issuedCouponId))
     }
 }

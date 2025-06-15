@@ -12,6 +12,6 @@ class CouponProducer(
 ) {
     fun sendIssuedCoupon(command: RequestCouponCommand) {
         val payload = IssuedCouponMessage(command)
-        kafkaTemplate.send(ISSUED_COUPON_TOPIC, command.couponGroupId, payload)
+        kafkaTemplate.send(ISSUED_COUPON_TOPIC, command.userId, payload)
     }
 }

@@ -10,6 +10,7 @@ import org.springframework.web.bind.annotation.RestControllerAdvice
 import yong.chul.coupon.issued_coupon_app.usecase.exception.CouponNotAvailableIssuedException
 import yong.chul.coupon.issued_coupon_app.usecase.exception.DuplicateCouponException
 import yong.chul.coupon.issued_coupon_app.usecase.exception.OverIssuedCouponException
+import yong.chul.coupon.issued_coupon_app.usecase.exception.UserCouponAlreadyUsedException
 
 @RestControllerAdvice(basePackageClasses = [ApiExceptionController::class])
 class ApiExceptionController {
@@ -63,5 +64,11 @@ class ApiExceptionController {
     @ExceptionHandler(value = [CouponNotAvailableIssuedException::class])
     fun couponNotAvailableExceptionHandler(e: CouponNotAvailableIssuedException): ErrorRes {
         return ErrorRes(406021, e.message)
+    }
+
+    @ResponseStatus(HttpStatus.NOT_ACCEPTABLE)
+    @ExceptionHandler(value = [UserCouponAlreadyUsedException::class])
+    fun userCouponAlreadyUsedExceptionHandler(e: UserCouponAlreadyUsedException): ErrorRes {
+        return ErrorRes(406031, e.message)
     }
 }
